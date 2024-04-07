@@ -178,7 +178,7 @@ if __name__ == '__main__':
     @bot.command(name='new-game')
     async def reset_game(ctx: commands.Context):
         game_log.info("starting new game")
-        game_instance.reset_game(channel_id=ctx.channel.id)
+        game_instance.reset_game(categories=categories, channel_id=ctx.channel.id)
 
 
 

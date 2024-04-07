@@ -4,23 +4,22 @@ import numpy.random
 import logging
 
 from typing import Dict
-
+from copy import deepcopy
 
 class RankingGame:
-    _TOPICS: list[str] = ['Who is the most charming?']
     CONTINUE: bool = True
     RUNNING: bool = False
     CALCULATING_ROUND_SCORES: bool = False
 
-    def __init__(self, channel_id: int | None = None, categories: list[str] | None = None) -> None:
+    def __init__(self,  categories: list[str], channel_id: int | None = None,) -> None:
         self._players: list[discord.Member | discord.User] = []
         self._lobby: list[discord.Member] = []
         self._anti_lobby: list[discord.Member] = []
 
         self.log = logging.getLogger('RankYourFriends_Log')
 
-        if categories is not None:
-            self._TOPICS = categories
+        self._categories: list[str] = categories
+        self._used_categories: list[str] = []
 
 
         self._rng = numpy.random.default_rng()
@@ -103,8 +102,8 @@ class RankingGame:
     def number_of_players(self):
         return len(self._players)
 
-    def reset_game(self, channel_id: int | None = None):
-        self.__init__(channel_id)
+    def reset_game(self, categories: list[str], channel_id: int | None = None):
+        self.__init__(categories, channel_id)
 
     def start_new_round(self):
         self.RUNNING = True
@@ -123,7 +122,16 @@ class RankingGame:
         self._has_current_round_submission: dict[str, bool] = {player.display_name: False for player in self._players}
         self._current_round_ranks = {}
 
-        self._current_question = np.random.choice(self._TOPICS)
+
+        if len(self._categories) == 0:
+            self._categories = deepcopy(self._used_categories)
+            self._used_categories.clear()
+
+
+        self._current_question = np.random.choice(self._categories)
+
+        self._used_categories.append(self.current_question)
+        self._categories.remove(self.current_question)  # removes categories from selection to avoid duplicate rounds.
 
     def is_valid_response(self, order: str):
         if (
