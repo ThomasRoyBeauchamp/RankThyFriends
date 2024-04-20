@@ -11,3 +11,9 @@ Commands:
 !status will show who still has to submit responses to the questions.
 
 All other interactions are handled by DMs with the bot.
+
+To run, you require an additional file called discordBot.env, with the following format:
+
+DISCORD_TOKEN={discord application API key}
+DISCORD_GUILD={ID of discord server/guild}
+DEFAULT_CHANNEL_ID={ID of channel to play in}
