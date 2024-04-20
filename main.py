@@ -17,6 +17,7 @@ if __name__ == '__main__':
                                  required=False,
                                  default=None,
                                  help="Line-separated file of all the categories to be played.")
+    argument_parser.add_argument("--environment", "-e", required=False,default=None, help="Name of .env file to load")
 
     args = argument_parser.parse_args()
 
@@ -25,18 +26,20 @@ if __name__ == '__main__':
     else:
         file_to_load = args.categories
 
+
+
+
     categories = []
     with open(file_to_load, 'r') as F:
         for line in F:
             if line != '\n':
                 categories.append(line.replace('\n',''))
 
+    if args.environment is None:
+        load_dotenv('discordBot.env')
+    else:
+        load_dotenv(args.environment)
 
-
-
-
-
-    load_dotenv('discordBot.env')
     TOKEN = os.getenv('DISCORD_TOKEN')
     GUILD = int(os.getenv('DISCORD_GUILD'))
     CHANNEL_ID = int(os.getenv('DEFAULT_CHANNEL_ID'))
@@ -68,10 +71,10 @@ if __name__ == '__main__':
 
 
     @bot.event
-    async def on_message(message):
+    async def on_message(message: discord.Message):
         game_log.info(f"received message from {message.author}")
         guild = bot.get_guild(GUILD)
-        if message.author == bot.user:
+        if message.author == bot.user or message.guild.id != GUILD:
             return
 
         if isinstance(message.channel, discord.DMChannel):

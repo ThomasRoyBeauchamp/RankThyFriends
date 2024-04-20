@@ -24,3 +24,8 @@ To install the necessary python packages, run "pip install -r requirements.txt"
 On Windows, you may have to activate the Anaconda base environment by running the windows batch script
 "C:\Users\{user}\anaconda3\Scripts\activate" before doing the pip install. You can then run the bot with
 "python main.py". Note it WILL NOT WORK if you run main.py from within spyder.
+
+When running main.py you can add different options. these are:
+
+-c or -f {file.txt} to choose a list of questions (one per line)
+-e {file.env} to specify which .env to load.
