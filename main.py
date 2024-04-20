@@ -254,9 +254,9 @@ Enter your ranking in the format xyz, where x,y,z are either player ids and y ca
     async def status(ctx: commands.Context):
 
         output = f"""
-Waiting for rankings from: {[p for p in game_instance.players if not game_instance.has_submitted_ranking(p)]}
+Waiting for rankings from: {[p.nick for p in game_instance.players if not game_instance.has_submitted_ranking(p)]}
 
-Waiting for position guess from: {[p for p in game_instance.players if not game_instance.has_submitted_current_round_guess(p)]}
+Waiting for position guess from: {[p.nick for p in game_instance.players if not game_instance.has_submitted_current_round_guess(p)]}
         """
 
         await ctx.channel.send(output)
