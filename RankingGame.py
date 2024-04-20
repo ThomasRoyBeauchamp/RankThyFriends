@@ -140,7 +140,8 @@ class RankingGame:
                 all(x.isdigit() for x in order) and  # checks for valid digits
                 all(order.count(x) == 1 for x in set(order)) and  # checks for duplicates
                 len(order) <= self.number_of_players and  # checks for too many entries
-                all(0 <= int(x) <= self.number_of_players for x in order)  # checks that all entries correspond to players
+                all(0 <= int(x) <= self.number_of_players for x in order) and
+                any(1 <= int(x) <= self.number_of_players for x in order) # checks that all entries correspond to players
         ):
             return True
         else:
