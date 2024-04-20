@@ -19,3 +19,8 @@ DISCORD_GUILD={ID of discord server/guild}
 DEFAULT_CHANNEL_ID={ID of channel to play in}
 
 To install the necessary python packages, run "pip install -r requirements.txt"
+
+
+On Windows, you may have to activate the Anaconda base environment by running the windows batch script
+"C:\\Users\{user}\anaconda3\Scripts\activate" before doing the pip install. You can then run the bot with
+"python main.py". Note it WILL NOT WORK if you run main.py from within spyder.
