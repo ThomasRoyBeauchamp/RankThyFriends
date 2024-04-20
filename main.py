@@ -78,9 +78,9 @@ if __name__ == '__main__':
 
             msg = message.content.strip()
 
-            if not game_instance.has_submitted_ranking(message.author.display_name):
+            if not game_instance.has_submitted_ranking(message.author.name):
 
-                match game_instance.submit_ranking(msg, message.author.display_name):
+                match game_instance.submit_ranking(msg, message.author.name):
                     case 0:
                         await message.channel.send("Ranking received, thank you :) Where do you think you will"
                                                    f" fall in the overall ranking? (1-{game_instance.number_of_players})")
@@ -92,8 +92,8 @@ if __name__ == '__main__':
                         await message.channel.send("You are not currently in the game, please join with !join-game")
                         game_log.info(f"Rejected ranking from {message.author.display_name}")
 
-            elif not game_instance.has_submitted_current_round_guess(message.author.display_name):
-                match game_instance.submit_position_guess(msg, message.author.display_name):
+            elif not game_instance.has_submitted_current_round_guess(message.author.name):
+                match game_instance.submit_position_guess(msg, message.author.name):
                     case 0:
                         await message.channel.send(f"Guess received, thank you :) The round results will be posted "
                                                    f"in {guild.get_channel(game_instance.channel_id).name} shortly.")
@@ -120,7 +120,7 @@ if __name__ == '__main__':
                                    f'After considering your responses, the overall ranking is as follows:\n\n')
 
                 final_ordering = list(game_instance.current_round_ranking.items())
-                final_ordering.sort(key=lambda x: x[1], reverse=True)
+                final_ordering.sort(key=lambda x: x[1], reverse=False)
                 results_message += '\n'.join([f"{x[1]}: {x[0]}" for x in final_ordering]) + '\n\n'
 
                 game_log.info("Ranking for round:"+'|'.join([f"{x[1]}: {x[0]}" for x in final_ordering]))
@@ -130,11 +130,13 @@ if __name__ == '__main__':
                     f"{x[0]}: {x[1]}" for x in game_instance.current_round_position_guesses_entries
                 ]) + '.\n\n'
 
+                points_for_round = game_instance.calculate_points()
+
                 results_message += 'This means you each scored points as follows:\n\n'
-                results_message += '\n'.join(f"{x[0]}: {x[1]}" for x in game_instance.calculate_points().items()) + '.\n\n'
+                results_message += '\n'.join(f"{x[0]}: {x[1]}" for x in points_for_round.items()) + '.\n\n'
 
                 game_log.info("Points for round:" + '|'.join(
-                    f"{x[0]}: {x[1]}" for x in game_instance.calculate_points().items()))
+                    f"{x[0]}: {x[1]}" for x in points_for_round.items()))
 
                 results_message += 'The overall scores are as now follows:\n\n'
                 results_message += '\n'.join([
@@ -144,26 +146,7 @@ if __name__ == '__main__':
                 await output_channel.send(results_message)
 
                 if game_instance.CONTINUE:
-                    game_instance.start_new_round()
-                    game_instance.CALCULATING_ROUND_SCORES = False
-                    guild = bot.get_guild(GUILD)
-                    output_channel = guild.get_channel(game_instance.channel_id)
-                    await output_channel.send(f"The question this round is:\n\n {game_instance.current_question}")
-                    game_log.info(f"Round Question: {game_instance.current_question}")
-
-                    players_in_game_list = '\n'.join([f"{x[0]+1}: {x[1]}" for x in enumerate(game_instance.player_names)])
-                    for player in game_instance.players:
-                        dm_channel = await player.create_dm()
-                        await dm_channel.send(f"""
-    The question this round is:
-    
-    {game_instance.current_question}
-    
-    Please rank the following players:
-    {players_in_game_list}
-    
-    Enter your ranking in the format xyz, where x,y,z are either player ids and y can be 0 to indicate no preference for middle positions. 
-                        """)
+                    pass
 
                 else:
                     await output_channel.send(f"The game has ended! The winner is "
@@ -173,6 +156,28 @@ if __name__ == '__main__':
 
         await bot.process_commands(message)
 
+    @bot.command(name='next')
+    async def next_round(ctx: commands.Context):
+        game_instance.start_new_round()
+        game_instance.CALCULATING_ROUND_SCORES = False
+        guild = bot.get_guild(GUILD)
+        output_channel = guild.get_channel(game_instance.channel_id)
+        await output_channel.send(f"The question this round is:\n\n {game_instance.current_question}")
+        game_log.info(f"Round Question: {game_instance.current_question}")
+
+        players_in_game_list = '\n'.join([f"{x[0] + 1}: {x[1]}" for x in enumerate(game_instance.player_names)])
+        for player in game_instance.players:
+            dm_channel = await player.create_dm()
+            await dm_channel.send(f"""
+            The question this round is:
+
+            {game_instance.current_question}
+
+            Please rank the following players:
+            {players_in_game_list}
+
+            Enter your ranking in the format xyz, where x,y,z are either player ids and y can be 0 to indicate no preference for middle positions. 
+                                """)
 
 
     @bot.command(name='new-game')
@@ -204,9 +209,12 @@ if __name__ == '__main__':
     @bot.command(name='leave-game')
     async def leave(ctx: commands.Context):
         guild = bot.get_guild(GUILD)
-        game_instance.remove_player(ctx.author)
         output_channel = guild.get_channel(game_instance.channel_id)
-        await output_channel.send(f'Removed {ctx.author.display_name} ({ctx.author.name}) from game')
+        match game_instance.remove_player(ctx.author):
+            case 0:
+                await output_channel.send(f'Removed {ctx.author.display_name} ({ctx.author.name}) from game')
+            case 1:
+                await output_channel.send(f'{ctx.author.display_name} ({ctx.author.name}) will be removed at the end of the round.')
 
 
     @bot.command(name='start-game')
@@ -219,14 +227,14 @@ if __name__ == '__main__':
         for player in game_instance.players:
             dm_channel = await player.create_dm()
             await dm_channel.send(f"""
-        The question this round is:
+The question this round is:
     
         {game_instance.current_question}
     
-        Please rank the following players:
-        {players_in_game_list}
+Please rank the following players:
+{players_in_game_list}
     
-        Enter your ranking in the format xyz, where x,y,z are either player ids and y can be 0 to indicate no preference for middle positions. 
+Enter your ranking in the format xyz, where x,y,z are either player ids and y can be 0 to indicate no preference for middle positions. 
                             """)
 
         game_log.info(f"Round Question: {game_instance.current_question}")
