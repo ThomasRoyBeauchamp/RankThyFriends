@@ -17,3 +17,5 @@ To run, you require an additional file called discordBot.env, with the following
 DISCORD_TOKEN={discord application API key}
 DISCORD_GUILD={ID of discord server/guild}
 DEFAULT_CHANNEL_ID={ID of channel to play in}
+
+To install the necessary python packages, run "pip install -r requirements.txt"
