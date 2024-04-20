@@ -82,12 +82,14 @@ class RankingGame:
                 self._lobby.append(player)
             
 
-    def remove_player(self, player: discord.Member):
+    def remove_player(self, player: discord.Member) -> int:
         if not self.RUNNING:
             if player in self._players:
                 self._players.remove(player)
+                return 0
         else:
             self._anti_lobby.append(player)
+            return 1
 
 
     @property
@@ -117,9 +119,9 @@ class RankingGame:
                 self._players.remove(player)
 
         self._current_round_score = np.zeros((self.number_of_players, self.number_of_players))
-        self._current_round_position_guesses = {player.display_name: None for player in self._players}
+        self._current_round_position_guesses = {player.name: None for player in self._players}
 
-        self._has_current_round_submission: dict[str, bool] = {player.display_name: False for player in self._players}
+        self._has_current_round_submission: dict[str, bool] = {player.name: False for player in self._players}
         self._current_round_ranks = {}
 
 
@@ -138,7 +140,7 @@ class RankingGame:
                 all(x.isdigit() for x in order) and  # checks for valid digits
                 all(order.count(x) == 1 for x in set(order)) and  # checks for duplicates
                 len(order) <= self.number_of_players and  # checks for too many entries
-                all(1 <= int(x) <= self.number_of_players for x in order)  # checks that all entries correspond to players
+                all(0 <= int(x) <= self.number_of_players for x in order)  # checks that all entries correspond to players
         ):
             return True
         else:
@@ -176,6 +178,7 @@ class RankingGame:
             return 1
         else:
             self._current_round_position_guesses[player] = int(guess[0])
+            return 0
         pass
 
 
@@ -229,15 +232,15 @@ class RankingGame:
                 self.overall_score[player.display_name] = 0
 
             if (self.current_round_ranking[player.display_name] ==
-                    self._current_round_position_guesses[player.display_name]):
+                    self._current_round_position_guesses[player.name]):
                 round_score[player] = 2
                 self.overall_score[player.display_name] += 2
             elif abs(self.current_round_ranking[player.display_name] -
-                     self._current_round_position_guesses[player.display_name]) == 1:
+                     self._current_round_position_guesses[player.name]) == 1:
                 round_score[player] = 1
                 self.overall_score[player.display_name] += 1
             else:
-                round_score[player.display_name] = 0
+                round_score[player.name] = 0
 
         return round_score
 
