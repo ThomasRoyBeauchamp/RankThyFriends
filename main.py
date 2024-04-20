@@ -47,7 +47,7 @@ if __name__ == '__main__':
     intents = discord.Intents.default()
     intents.message_content = True
 
-    game_instance = RankingGame(channel_id=CHANNEL_ID, categories=categories)
+    game_instance: RankingGame = RankingGame(channel_id=CHANNEL_ID, categories=categories)
 
     game_log = logging.getLogger('RankYourFriends_Log')
     game_log.setLevel('INFO')
@@ -249,6 +249,20 @@ Enter your ranking in the format xyz, where x,y,z are either player ids and y ca
     @bot.command(name='final-round')
     async def final_round(ctx: commands.Context):
         game_instance.CONTINUE = False
+
+    @bot.command(name='status')
+    async def status(ctx: commands.Context):
+
+        output = f"""
+Waiting for rankings from: {[p for p in game_instance.players if not game_instance.has_submitted_ranking(p)]}
+
+Waiting for position guess from: {[p for p in game_instance.players if not game_instance.has_submitted_current_round_guess(p)]}
+        """
+
+        await ctx.channel.send(output)
+
+
+    #################################
 
 
     bot.run(TOKEN)
